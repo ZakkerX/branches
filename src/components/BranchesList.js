@@ -1,37 +1,57 @@
 import React, {useEffect, useState} from 'react';
-import {Badge, Table} from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
+import {Badge, Input, Table} from 'antd';
+import {CloseOutlined, SearchOutlined} from '@ant-design/icons';
 import ModalDelete from "./ModalDelete";
-import {useTypesSelector} from "../hooks/useTypedSelector";
-import {useActions} from "../hooks/useActions";
+import ModalAdd from "./ModalAdd";
 
-
-
-const BranchesList:React.FC = () => {
-
+const BranchesList= ({branches, loading, error}) => {
     const [visible, setVisible] = useState(false);
     const [item, setItem] = useState({})
+    const [query, setQuery] = useState('')
+    const [mockBranches, setMockBranches] = useState([])
 
-    const onItem = (text:any) => {
+    const onItem = (text) => {
         setItem(text)
         setVisible(true)
     }
 
     const onDelete = () => {
-        deleteBranch(item)
+        const result = mockBranches.filter(br => br.id !== item.id)
+        setMockBranches(result)
         setVisible(false)
     }
 
-    const {branches, error, loading} = useTypesSelector(state => state.branch)
+    const search = () => {
+        const res = mockBranches.filter(item => {
+            if(item.phone.includes(query)){
+                return item
+            }
+        })
+        setMockBranches(res)
+    }
 
-    const {success, error: deleteError, loading: deleteLoading} = useTypesSelector(state => state.deleteBranch)
+    const addHandler = (address, phone) => {
 
-    const {fetchBranches, deleteBranch} = useActions()
+        const id = Math.floor(Math.random() * 100).toString()
+        const  data = {
+            id,
+            address,
+            sity: 'Новосибирск',
+            phone,
+            officeManager: 'Задорожный К.Л.',
+            officeAdministrator: 'Ефимова К.А.',
+            status: true
+        }
+        setMockBranches([...mockBranches, data])
+    };
 
     useEffect(() => {
-        fetchBranches()
-    }, [success])
+        search()
+    }, [query])
 
+    useEffect(() => {
+        setMockBranches(branches)
+    }, [branches])
 
     const columns = [
         {
@@ -39,7 +59,7 @@ const BranchesList:React.FC = () => {
             dataIndex: '',
             key: 'index',
             sorter: {},
-            render: (text:any, record:any, index:number) => (
+            render: (text, record, index) => (
                 <span>{index + 1}</span>
             ),
         },
@@ -48,7 +68,7 @@ const BranchesList:React.FC = () => {
             dataIndex: '',
             key: 'address',
             sorter: {},
-            render: (text:any) => (
+            render: (text) => (
                 <div className='tableBranches__cell'>
                     <span className='tableBranches__cell-address'>{text.address}</span>
                     <span>{text.sity}</span>
@@ -60,7 +80,7 @@ const BranchesList:React.FC = () => {
             dataIndex: 'phone',
             key: 'phone',
             sorter: {},
-            render: (phone:string) => (
+            render: (phone) => (
                 <div className='tableBranches__cell'>
                     {phone.split(' ').map((str, i) => {
                         return <span key={i}>{str}</span>
@@ -85,7 +105,7 @@ const BranchesList:React.FC = () => {
             dataIndex: 'status',
             key: 'status',
             sorter: {},
-            render: (status:boolean) => (
+            render: (status) => (
                 <>
                     {status ? <Badge
                         count={'Активный' }
@@ -101,7 +121,7 @@ const BranchesList:React.FC = () => {
             title: 'Действия',
             dataIndex: '',
             key: 'x',
-            render: (text:any) => (
+            render: (text) => (
                 <div className='tableBranches__cell'>
                     <span  className='tableBranches__cell-delete'>
                          <CloseOutlined onClick={() => onItem(text)}/>
@@ -113,12 +133,27 @@ const BranchesList:React.FC = () => {
     ];
 
     return (
-
-        <div className="site-layout-background">
-            <Table loading={loading}  className='tableBranches' columns={columns} dataSource={branches} rowKey='id' />
-            <ModalDelete loading={loading} visible={visible} item={item} onVisible={() => setVisible(false)} onDelete={onDelete}/>
-        </div>
-
+        <>
+            {error && <>{error}</>}
+            <div className='navigation'>
+                <Input className='navigation__input' value={query}
+                       onChange={(e) => setQuery(e.target.value)}
+                       size="large"
+                       placeholder="Поиск"
+                       prefix={<SearchOutlined />} />
+                <ModalAdd addHandler={addHandler}/>
+            </div>
+            <div className="site-layout-background">
+                <Table loading={loading}  className='tableBranches' columns={columns} dataSource={mockBranches} rowKey='id' />
+                <ModalDelete
+                    loading={loading}
+                    visible={visible}
+                    item={item}
+                    onVisible={() => setVisible(false)}
+                    onDelete={onDelete}
+                />
+            </div>
+        </>
     )
 }
 

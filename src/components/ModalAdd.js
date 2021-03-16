@@ -1,28 +1,17 @@
 import React, {useEffect, useState} from 'react';
 import {Modal, Form, Input, Button} from 'antd';
-import {useActions} from "../hooks/useActions";
-import {useTypesSelector} from "../hooks/useTypedSelector";
 
-
-const ModalAdd:React.FC = () => {
+const ModalAdd = ({addHandler}) => {
     const [visible, setVisible] = useState(false);
     const [address, setAddress] = useState('')
     const [phone, setPhone] = useState('')
 
     const handleOk = () => {
-        addBranch({id: '12', address, sity: 'Новосибирск', phone, officeManager: 'Задорожный К.Л.', officeAdministrator: 'Ефимова К.А.', status: true})
-    };
-    const {success, error, loading} = useTypesSelector(state => state.addBranch)
-    const {addBranch, fetchBranches} = useActions()
-
-    useEffect(() => {
-        if(success) {
-            setVisible(false);
-            setAddress('')
-            setPhone('')
-        }
-        fetchBranches()
-    }, [success])
+        setPhone('')
+        setAddress('')
+        setVisible(false)
+        addHandler(address, phone)
+    }
 
     return (
         <>
@@ -31,24 +20,25 @@ const ModalAdd:React.FC = () => {
             </Button>
             <Modal
                 className='modalBranch'
-                width={300}
+                width={327}
                 title="Добавление филиала"
                 visible={visible}
                 onCancel={() => setVisible(false)}
                 footer={null}
             >
-                {error && <p>{error}</p>}
                 <Form layout="vertical">
                     <Form.Item label="Адресс">
-                        <Input required placeholder="" value={address} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)}/>
+                        <Input required placeholder="" value={address} onChange={(e) => setAddress(e.target.value)}/>
                     </Form.Item>
                     <Form.Item label="Телефон">
-                        <Input required type='tel' placeholder="" value={phone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)}/>
+                        <Input required type='tel' placeholder="" value={phone} onChange={(e) => setPhone(e.target.value)}/>
                     </Form.Item>
                     <div className='modalBranch__buttons'>
                         <Button size='large' className='modalBranch__buttons-save'
-                                loading={loading}
-                                onClick={handleOk}
+                                onClick={() => {
+
+                                    handleOk(phone, address)
+                                }}
                                 type="primary"
                         >
                             Сохранить
